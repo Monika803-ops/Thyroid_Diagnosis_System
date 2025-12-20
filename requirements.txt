@@ -1,0 +1,10 @@
+flask
+flask-cors
+tensorflow>=2.8
+numpy
+pillow
+opencv-python
+scikit-learn
+bcrypt
+pyjwt
+gunicorn
