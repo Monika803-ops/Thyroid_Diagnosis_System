@@ -86,7 +86,8 @@ setMessages((prev) => {
         updated[idx] = {
           sender: "bot",
           text:
-            "⚠️ The AI service is currently unavailable. Please ensure Ollama is running (`ollama serve`) and try again.",
+            "text:
+  "⚠️ The AI service is currently unavailable. Please try again later.",
         };
         return updated;
       });
