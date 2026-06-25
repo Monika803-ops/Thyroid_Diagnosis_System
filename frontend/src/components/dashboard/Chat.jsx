@@ -84,11 +84,9 @@ setMessages((prev) => {
         const updated = [...prev];
         const idx = placeholderIndexRef.current ?? updated.length - 1;
         updated[idx] = {
-          sender: "bot",
-          text:
-            "text:
-  "⚠️ The AI service is currently unavailable. Please try again later.",
-        };
+  sender: "bot",
+  text: "⚠️ The AI service is currently unavailable. Please try again later.",
+};
         return updated;
       });
     } finally {
