@@ -52,50 +52,32 @@ export default function Chat() {
       const url = base.endsWith("/") ? `${base}chat` : `${base}/chat`;
 
       const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
-      });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    message: trimmed,
+  }),
+});
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText || "AI service error");
-      }
+if (!response.ok) {
+  throw new Error("AI service error");
+}
 
-      // Non-streaming fallback
-      if (!response.body) {
-        const full = await response.text();
-        setMessages((prev) => {
-          const updated = [...prev];
-          const idx = placeholderIndexRef.current ?? updated.length - 1;
-          updated[idx] = { sender: "bot", text: full };
-          return updated;
-        });
-        return;
-      }
+const data = await response.json();
 
-      // Streaming (optional)
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let botText = "";
+setMessages((prev) => {
+  const updated = [...prev];
+  const idx = placeholderIndexRef.current ?? updated.length - 1;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+  updated[idx] = {
+    sender: "bot",
+    text: data.reply,
+  };
 
-        const chunk = decoder.decode(value, { stream: true });
-        const cleaned = chunk.replace(/\[END\]/g, "");
-        botText += cleaned;
-
-        setMessages((prev) => {
-          const updated = [...prev];
-          const idx = placeholderIndexRef.current ?? updated.length - 1;
-          updated[idx] = { sender: "bot", text: botText };
-          return updated;
-        });
-
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
+  return updated;
+});
     } catch (err) {
       console.error("Chat streaming error:", err);
       setMessages((prev) => {
