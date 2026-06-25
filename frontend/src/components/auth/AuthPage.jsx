@@ -83,9 +83,9 @@ export default function AuthPage() {
       formData.append("phone", phone);
       if (profileImage) formData.append("profileImage", profileImage);
 
-      const res = await API.post("/auth/signup", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await API.post("/auth/signup", formData, {
+  headers: { "Content-Type": "multipart/form-data" },
+});
 
     alert("Account created successfully! Please login.");
 setTab("login");  // switch UI to login form
