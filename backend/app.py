@@ -7,8 +7,7 @@ import bcrypt
 import jwt
 import numpy as np
 import tensorflow as tf
-import requests
-import json
+from groq import Groq
 import re
 from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
@@ -415,34 +414,65 @@ def get_recent_predictions():
 # ✅ CHAT (thyroid only)
 # -------------------------------
 @app.route("/api/chat", methods=["POST"])
-def chat_with_ollama():
+def chat():
     data = request.get_json()
     user_message = data.get("message", "").strip()
+
     if not user_message:
-        return "Please enter a question.", 400
+        return jsonify({"message": "Please enter a question."}), 400
 
-    thyroid_keywords = ["thyroid", "hypothyroid", "hyperthyroid", "thyroiditis", "nodules", "thyroxine", "t3", "t4"]
-    if not any(re.search(rf"\b{kw}\b", user_message, re.IGNORECASE) for kw in thyroid_keywords):
-        return Response("💡 I’m your Thyroid Health Assistant. I can only help with thyroid-related conditions like hypothyroidism, hyperthyroidism, thyroiditis, nodules, and thyroid cancer.", content_type="text/plain")
+    thyroid_keywords = [
+        "thyroid",
+        "hypothyroid",
+        "hyperthyroid",
+        "thyroiditis",
+        "nodule",
+        "nodules",
+        "thyroid cancer",
+        "t3",
+        "t4",
+        "thyroxine",
+        "tsh",
+    ]
 
-    ollama_url = "http://127.0.0.1:11434/api/generate"
+    if not any(word.lower() in user_message.lower() for word in thyroid_keywords):
+        return jsonify({
+            "reply": "💡 I'm your Thyroid Health Assistant. I can only answer questions related to thyroid disorders, thyroid tests, symptoms, treatment, thyroid cancer, nodules, hypothyroidism, hyperthyroidism and thyroiditis."
+        })
 
-    def stream_reply():
-        try:
-            with requests.post(ollama_url, json={"model": "mistral", "prompt": user_message, "stream": True}, stream=True) as r:
-                for line in r.iter_lines():
-                    if line:
-                        try:
-                            data = json.loads(line.decode("utf-8"))
-                            if "response" in data:
-                                yield data["response"]
-                        except Exception:
-                            continue
-        except Exception as e:
-            print("❌ Ollama error:", e)
-        yield "[END]"
+    try:
+        client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
-    return Response(stream_reply(), content_type="text/plain")
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a thyroid health assistant. "
+                        "Answer only thyroid-related questions. "
+                        "Do not diagnose diseases. "
+                        "Recommend consulting a qualified doctor for medical decisions."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": user_message,
+                },
+            ],
+            temperature=0.3,
+            max_tokens=500,
+        )
+
+        return jsonify({
+            "reply": completion.choices[0].message.content
+        })
+
+    except Exception as e:
+        print(e)
+        return jsonify({
+            "reply": "Sorry, I couldn't generate a response right now."
+        }), 500
 # -------------------------------
 # ✅ DELETE ACCOUNT (Fix)
 # -------------------------------
