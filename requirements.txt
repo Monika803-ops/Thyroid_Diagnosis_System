@@ -8,3 +8,4 @@ scikit-learn
 bcrypt
 pyjwt
 gunicorn
+gdown
