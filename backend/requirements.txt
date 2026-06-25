@@ -10,3 +10,4 @@ pyjwt
 gunicorn
 gdown
 python-dotenv
+groq
