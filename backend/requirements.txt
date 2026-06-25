@@ -9,3 +9,4 @@ bcrypt
 pyjwt
 gunicorn
 gdown
+python-dotenv
