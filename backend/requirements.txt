@@ -1,11 +1,12 @@
 Flask
 flask-cors
-bcrypt
-PyJWT
-Pillow
+gunicorn
+python-dotenv
 requests
 groq
 gdown
+bcrypt
+PyJWT
+Pillow
 tensorflow
 numpy
-gunicorn
