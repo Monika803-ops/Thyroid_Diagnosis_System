@@ -1,5 +1,6 @@
 import os
 import uuid
+import gdown
 import datetime
 import sqlite3
 import bcrypt
@@ -28,12 +29,40 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 
 # -------------------------------
+# -------------------------------
+# ✅ DOWNLOAD MODEL FROM GOOGLE DRIVE
+# -------------------------------
+
+MODEL_FILE_ID = "19JpEpKntU2vanCSVTCWG-iPucmyILUL1"
+
+if not os.path.exists(MODEL_PATH):
+    print("⬇ Model not found. Downloading from Google Drive...")
+
+    url = f"https://drive.google.com/uc?export=download&id={MODEL_FILE_ID}"
+
+    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+
+    gdown.download(url, MODEL_PATH, quiet=False)
+
+    print("✅ Model downloaded successfully.")
+
+# -------------------------------
 # ✅ LOAD MODEL
 # -------------------------------
+
 try:
     model = tf.keras.models.load_model(MODEL_PATH)
-    LABELS = ["hypothyroid", "hyperthyroid", "thyroid_cancer", "thyroid_nodules", "thyroiditis"]
+
+    LABELS = [
+        "hypothyroid",
+        "hyperthyroid",
+        "thyroid_cancer",
+        "thyroid_nodules",
+        "thyroiditis",
+    ]
+
     print("✅ Model loaded successfully:", MODEL_PATH)
+
 except Exception as e:
     print("❌ Error loading model:", e)
     model = None
