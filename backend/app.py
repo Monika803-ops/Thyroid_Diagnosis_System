@@ -4,6 +4,7 @@ import gdown
 import datetime
 import sqlite3
 import bcrypt
+import requests
 import jwt
 import numpy as np
 import tensorflow as tf
@@ -302,40 +303,43 @@ def predict():
 
     pred_dir = os.path.join(UPLOAD_FOLDER, "predictions")
     os.makedirs(pred_dir, exist_ok=True)
+
     filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
     path = os.path.join(pred_dir, filename)
     file.save(path)
+
+    # ✅ Call Hugging Face API
     HF_URL = "https://monikanv-thyroid-diagnosis-api.hf.space"
 
-with open(path, "rb") as f:
-    response = requests.post(
-        HF_URL + "/predict",
-        files={"image": f}
-    )
+    with open(path, "rb") as f:
+        response = requests.post(
+            HF_URL + "/predict",
+            files={"image": f}
+        )
 
-if response.status_code != 200:
-    return jsonify({"message": "Prediction service unavailable"}), 500
+    if response.status_code != 200:
+        return jsonify({"message": "Prediction service unavailable"}), 500
 
-result = response.json()
+    result = response.json()
 
-label = result["label"]
-confidence = result["confidence"] / 100
+    label = result["label"]
+    confidence = result["confidence"] / 100.0
+    probabilities = result["probabilities"]
 
-probabilities = result["probabilities"]
-
-    
-    
-
+    # Save prediction
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO predictions VALUES (?, ?, ?, ?, ?, ?)", (
-        str(uuid.uuid4()),
-        email,
-        label,
-        confidence,
-        datetime.datetime.now().isoformat(),
-        path
-    ))
+    c.execute(
+        "INSERT INTO predictions VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            str(uuid.uuid4()),
+            email,
+            label,
+            confidence,
+            datetime.datetime.now().isoformat(),
+            path,
+        ),
+    )
     conn.commit()
     conn.close()
 
@@ -347,7 +351,6 @@ probabilities = result["probabilities"]
         "image": f"/uploads/predictions/{os.path.basename(path)}",
         "probabilities": probabilities
     })
-
 
 # -------------------------------
 # ✅ RECENT PREDICTIONS (New Route)
