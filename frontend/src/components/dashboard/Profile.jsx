@@ -5,8 +5,10 @@ import { AuthContext } from "../../context/AuthContext";
 import API from "../../api/axiosConfig";
 
 export default function Profile() {
-  const { user, logout, updateUser } = useContext(AuthContext);
-  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
+  const { user, updateUser } = useContext(AuthContext);
+  const API_URL =
+  (process.env.REACT_APP_API_URL || "https://thyroid-diagnosis-system.onrender.com/api")
+    .replace("/api", "");
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
