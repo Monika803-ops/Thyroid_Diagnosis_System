@@ -305,17 +305,26 @@ def predict():
     filename = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
     path = os.path.join(pred_dir, filename)
     file.save(path)
+    HF_URL = "https://monikanv-thyroid-diagnosis-api.hf.space"
 
-    if model is None:
-        return jsonify({"message": "Model not loaded"}), 500
+with open(path, "rb") as f:
+    response = requests.post(
+        HF_URL + "/predict",
+        files={"image": f}
+    )
 
-    img_arr = preprocess_image(path)
-    preds = model.predict(img_arr)[0]
-    idx = int(np.argmax(preds))
-    label = LABELS[idx]
-    confidence = float(preds[idx])
+if response.status_code != 200:
+    return jsonify({"message": "Prediction service unavailable"}), 500
 
-    probabilities = [{"label": LABELS[i], "prob": float(preds[i])} for i in range(len(LABELS))]
+result = response.json()
+
+label = result["label"]
+confidence = result["confidence"] / 100
+
+probabilities = result["probabilities"]
+
+    
+    
 
     conn = sqlite3.connect(DATABASE_PATH)
     c = conn.cursor()
